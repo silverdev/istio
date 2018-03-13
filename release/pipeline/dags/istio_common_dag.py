@@ -1,4 +1,4 @@
-"""Airfow DAG and helpers used in one or more istio release pipeline."""
+"""Airfow DAG and helpers used in one or more istio release pipline."""
 """Copyright 2017 Istio Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ YESTERDAY = datetime.datetime.combine(
 default_args = {
     'owner': 'laane',
     'depends_on_past': False,
-    # This is the date to when the airlfow pipeline tryes to backfil to.
+    # This is the date to when the airlfow pipline tryes to backfil to.
     'start_date': YESTERDAY,
     'email': environment_config.EMAIL_LIST,
     'email_on_failure': True,
@@ -91,11 +91,9 @@ def MakeCommonDag(name='istio_daily_flow_test',
     if conf is None:
       conf = dict()
 
-    """ Airflow gives the execution date when the job is supposed to be run,
-        however we dont backfill and only need to run one build therefore use
-        the current date instead of the date that is passed in """
-#    date = kwargs['execution_date']
-    date = datetime.datetime.now()
+    # We want to use the airflow provided  date = kwargs['execution_date']
+    # but we find it's always a day behind.
++   date = datetime.datetime.now()
 
     timestamp = time.mktime(date.timetuple())
 
@@ -220,8 +218,9 @@ def MakeCommonDag(name='istio_daily_flow_test',
     -u "{{ settings.MFEST_URL }}" \
     -t "{{ m_commit }}" -m "{{ settings.MFEST_FILE }}" \
     -a {{ settings.SVC_ACCT }}
+    echo "{{ m_commit }}" >> green_build_sha.txt
+    gsutil cp green_build_sha.txt gs://{{ settings.GCS_BUILD_PATH }}/green_build_sha.txt
     """
-  # NOTE: if you add commands to build_template after start_gcb_build.sh then take care to preserve its return value
 
   build = BashOperator(
       task_id='run_cloud_builder', bash_command=build_template, dag=common_dag)
@@ -239,8 +238,8 @@ def MakeCommonDag(name='istio_daily_flow_test',
     --tag="{{ settings.VERSION }}"
     """
 
-  run_release_qualification_tests = BashOperator(
-      task_id='run_release_qualification_tests',
+  run_release_quilification_tests = BashOperator(
+      task_id='run_release_quilification_tests',
       bash_command=test_command,
       retries=0,
       dag=common_dag)
@@ -252,8 +251,8 @@ def MakeCommonDag(name='istio_daily_flow_test',
       dag=common_dag,
   )
   generate_flow_args >> get_git_commit >> build
-  run_release_qualification_tests.set_upstream(build)
-  run_release_qualification_tests >> copy_files
+  run_release_quilification_tests.set_upstream(build)
+  run_release_quilification_tests >> copy_files
   return common_dag, copy_files
 
 

@@ -69,8 +69,6 @@ github_tag_repos = BashOperator(
     bash_command=daily_release_tag_github_template,
     dag=dag)
 
-copy_files >> push_release_to_github >> github_tag_repos
-
 
 def ReportMonthlySuccessful(task_instance, **kwargs):
   del kwargs
@@ -94,4 +92,4 @@ make_compleate = PythonOperator(
     dag=dag,
 )
 
-github_tag_repos >> make_compleate
+copy_files >> push_release_to_github >>  github_tag_repos  >> make_compleate
